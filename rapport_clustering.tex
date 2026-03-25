@@ -6,6 +6,7 @@
 \usepackage{booktabs}
 \usepackage{geometry}
 \usepackage{hyperref}
+\usepackage{float}
 \geometry{margin=2.5cm}
 
 \title{Clustering des données immobilières californiennes}
@@ -15,11 +16,16 @@
 \begin{document}
 \maketitle
 
+\noindent Dépôt GitHub : \url{https://github.com/Anisse-Imer/bloc-ia-prosit-1-clustering}
+
+\tableofcontents
+\clearpage
+
 \section{Description des données}
 
 Le jeu de données \texttt{housing.csv} contient 20\,640 enregistrements issus du recensement californien de 1990. Chaque ligne correspond à un \textit{block group} (plus petite unité administrative, 500 à 5\,000 habitants).
 
-\begin{table}[h]
+\begin{table}[H]
 \centering
 \caption{Variables du dataset}
 \begin{tabular}{lll}
@@ -51,14 +57,14 @@ Valeurs manquantes : seule \texttt{total\_bedrooms} présentait 207 valeurs null
     \item \textbf{Choix de k} : déterminé par \textbf{CAH} (Classification Ascendante Hiérarchique, méthode de Ward) via un dendrogramme (figure~\ref{fig:dendro}), puis validé par la méthode du coude (Elbow Method) sur le WCSS (figure~\ref{fig:elbow}). Les deux approches convergent vers $k = 5$.
 \end{enumerate}
 
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
 \includegraphics[width=0.85\textwidth]{data/dendrogram_cah.png}
 \caption{Dendrogramme CAH (méthode de Ward) --- échantillon de 2\,000 points}
 \label{fig:dendro}
 \end{figure}
 
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
 \includegraphics[width=0.85\textwidth]{data/elbow_method.png}
 \caption{Méthode du coude --- WCSS en fonction de k}
@@ -67,9 +73,13 @@ Valeurs manquantes : seule \texttt{total\_bedrooms} présentait 207 valeurs null
 
 \section{Résultats}
 
+\subsection{Principe de KMeans}
+
+L'algorithme KMeans partitionne les données en $k$ groupes en trois étapes itératives : (1) initialisation aléatoire de $k$ centroïdes, (2) assignation de chaque point au centroïde le plus proche (distance euclidienne), (3) recalcul des centroïdes comme barycentre de chaque groupe. Les étapes 2 et 3 sont répétées jusqu'à convergence (les assignations ne changent plus). L'objectif minimisé est le WCSS (\textit{Within-Cluster Sum of Squares}), soit la somme des distances au carré entre chaque point et son centroïde.
+
 \subsection{Distribution des clusters}
 
-\begin{table}[h]
+\begin{table}[H]
 \centering
 \caption{Statistiques par cluster (k = 5)}
 \begin{tabular}{crrr}
@@ -87,7 +97,7 @@ Cluster & Effectif & Prix moyen (\$) & Revenu moyen \\
 
 \subsection{Visualisation géographique}
 
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
 \includegraphics[width=0.85\textwidth]{data/clusters_scatter.png}
 \caption{Répartition spatiale des clusters (latitude vs longitude)}
@@ -114,7 +124,7 @@ Deux variables présentent un \textbf{plafonnement artificiel} visible dans leur
     \item \texttt{housing\_median\_age} est plafonné à 52 ans pour \textbf{1\,273 block groups} (6.2\,\%). Les bâtiments les plus anciens sont donc indistinguables dans le dataset.
 \end{itemize}
 
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
 \includegraphics[width=0.95\textwidth]{data/capped_values.png}
 \caption{Distributions avec valeurs plafonnées (pics visibles aux bornes)}
@@ -130,7 +140,7 @@ Le revenu médian est de loin le meilleur prédicteur du prix ($r = 0.69$), bien
     \item Des \textbf{zones à haut revenu mais prix modéré} (coin bas-droit) : possiblement des zones rurales aisées avec un foncier bon marché.
 \end{itemize}
 
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
 \includegraphics[width=0.85\textwidth]{data/income_vs_price.png}
 \caption{Revenu médian vs prix --- corrélation $r = 0.69$}
@@ -141,7 +151,7 @@ Le revenu médian est de loin le meilleur prédicteur du prix ($r = 0.69$), bien
 
 La proximité à l'océan a un impact majeur sur les prix (figure~\ref{fig:ocean}). Les zones \texttt{INLAND} affichent un prix médian de 108\,500\,\$, contre 233\,800\,\$ pour \texttt{NEAR BAY} --- plus du double. La catégorie \texttt{ISLAND} (5 observations seulement) montre des prix très élevés mais n'est pas statistiquement significative.
 
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
 \includegraphics[width=0.85\textwidth]{data/price_by_ocean.png}
 \caption{Prix médian par proximité à l'océan}
@@ -162,7 +172,7 @@ La figure~\ref{fig:corr} révèle plusieurs structures intéressantes :
     \item \texttt{median\_income} est la seule variable fortement corrélée au prix ($r = 0.69$) sans être redondante avec les autres.
 \end{itemize}
 
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
 \includegraphics[width=0.85\textwidth]{data/correlation_heatmap.png}
 \caption{Matrice de corrélation des variables numériques}
@@ -175,7 +185,7 @@ Malgré la multicolinéarité entre les variables de taille, toutes les variable
 
 En créant le ratio \texttt{bedrooms\_ratio} = \texttt{total\_bedrooms} / \texttt{total\_rooms}, on obtient une corrélation négative avec le prix ($r = -0.26$). Les logements avec une \textbf{proportion élevée de chambres} par rapport au nombre total de pièces sont moins chers. Cela correspond à des logements plus petits (studios, T1) où la chambre constitue l'essentiel de l'espace, typiques des zones à faible revenu.
 
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
 \includegraphics[width=0.85\textwidth]{data/bedrooms_ratio_vs_price.png}
 \caption{Ratio chambres/pièces vs prix --- corrélation $r = -0.26$}
@@ -204,7 +214,7 @@ Le score silhouette mesure pour chaque point la qualité de son assignation : $s
 
 La figure~\ref{fig:silscores} montre l'évolution du score silhouette moyen pour $k \in [2, 10]$. Le choix de $k = 5$ offre un compromis entre granularité de la segmentation et qualité du clustering.
 
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
 \includegraphics[width=0.85\textwidth]{data/silhouette_scores.png}
 \caption{Score silhouette moyen en fonction de k}
@@ -215,7 +225,7 @@ La figure~\ref{fig:silscores} montre l'évolution du score silhouette moyen pour
 
 La figure~\ref{fig:silplot} détaille la distribution du score silhouette pour chaque cluster. L'analyse silhouette doit être re-exécutée avec les nouveaux paramètres ($k = 5$, toutes variables, sans standardisation) via le notebook \texttt{silhouette\_analysis.ipynb}.
 
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
 \includegraphics[width=0.85\textwidth]{data/silhouette_plot.png}
 \caption{Silhouette plot par cluster (k=5)}
@@ -238,44 +248,40 @@ Le score silhouette permet d'identifier les clusters les plus cohérents (score 
     \item Export $\rightarrow$ \texttt{housing\_data\_knn\_clustered.csv} (20\,640 lignes, 11 colonnes)
 \end{enumerate}
 
+\clearpage
 \section*{Glossaire}
 
 \begin{description}
-    \item[Optimiser] Améliorer les performances d'un modèle ou d'un processus en ajustant ses paramètres ou sa structure.
-    \item[Intelligence artificielle] Domaine de l'informatique visant à créer des systèmes capables de simuler des capacités cognitives humaines (raisonnement, apprentissage, prise de décision).
-    \item[Jeu de données] Ensemble structuré de données utilisé pour l'analyse ou l'entraînement d'un modèle. Ici : \texttt{housing.csv} (20\,640 lignes, 10 colonnes).
-    \item[Zone géographique] Région délimitée par des coordonnées spatiales. Dans ce projet, chaque \textit{block group} californien est localisé par sa latitude et sa longitude.
-    \item[Exploité] Qualifie un jeu de données qui a été traité, nettoyé et analysé pour en extraire de l'information utile.
-    \item[Zone homogène] Ensemble de points partageant des caractéristiques similaires. Un cluster est une zone homogène dans l'espace des variables.
+    \item[Algorithme des K-Means] Algorithme de clustering partitionnant les données en $k$ groupes en minimisant la somme des distances intra-cluster (WCSS). Itératif : assignation puis mise à jour des centroïdes.
     \item[Analyse] Processus d'examen méthodique des données pour en dégager des tendances, des structures ou des anomalies.
     \item[Apprentissage automatique] (\textit{Machine Learning}) Sous-domaine de l'IA où les algorithmes apprennent des patterns à partir de données sans être explicitement programmés.
-    \item[Visualisation] Représentation graphique des données (histogrammes, scatter plots, cartes de chaleur) pour faciliter leur compréhension.
-    \item[Gestion des valeurs manquantes] Ensemble de techniques pour traiter les données absentes : suppression, imputation par médiane, KNN, etc.
-    \item[Lisibilité des données et graphiques] Qualité d'une représentation qui permet une interprétation rapide et correcte (choix des échelles, couleurs, légendes).
-    \item[Carte de chaleur] (\textit{Heatmap}) Visualisation matricielle où l'intensité de la couleur représente la valeur d'une variable. Utilisée ici pour la matrice de corrélation et la densité géographique.
-    \item[Archive .tgz] Format de fichier compressé (\textit{tar} + \textit{gzip}) couramment utilisé pour distribuer des jeux de données.
-    \item[Type de données] Nature d'une variable : numérique (float, int) ou catégorielle (chaîne de caractères). Détermine les traitements applicables.
-    \item[Distribution des variables] Répartition statistique des valeurs d'une variable, caractérisée par sa forme (normale, asymétrique), sa tendance centrale et sa dispersion.
-    \item[Statistiques descriptives] Mesures résumant un jeu de données : moyenne, médiane, écart-type, quartiles, min/max.
-    \item[Imputation] Remplacement des valeurs manquantes par des valeurs estimées. Méthodes : médiane, moyenne, KNNImputer, MICE, etc.
-    \item[Pandas] Bibliothèque Python pour la manipulation et l'analyse de données tabulaires via les structures \texttt{DataFrame} et \texttt{Series}.
-    \item[Colonnes catégorielles/numériques] Variables qualitatives (catégories : \texttt{ocean\_proximity}) vs quantitatives (nombres : \texttt{median\_income}). Le traitement diffère selon le type.
-    \item[Valeur médiane] Valeur séparant un ensemble de données en deux moitiés égales. Plus robuste aux outliers que la moyenne.
-    \item[Histogramme] Graphique en barres montrant la distribution de fréquence d'une variable continue, découpée en intervalles (\textit{bins}).
-    \item[Visualisation spatiale] Représentation de données géolocalisées sur une carte ou un plan (scatter plot lat/lon, Folium, Plotly maps).
-    \item[Corrélation] Mesure de la relation linéaire entre deux variables. Le coefficient de Pearson $r$ varie de $-1$ (inverse) à $+1$ (directe), 0 = aucune relation linéaire.
-    \item[Modèle d'apprentissage automatique] Algorithme entraîné sur des données pour effectuer des prédictions ou des classifications. Exemples : régression, KMeans, arbres de décision.
-    \item[Algorithme des K-Means] Algorithme de clustering partitionnant les données en $k$ groupes en minimisant la somme des distances intra-cluster (WCSS). Itératif : assignation puis mise à jour des centroïdes.
-    \item[Éthique] Ensemble de principes guidant l'utilisation responsable de l'IA et des données : transparence, équité, respect de la vie privée, non-discrimination.
-    \item[CNIL] Commission Nationale de l'Informatique et des Libertés. Autorité française chargée de veiller au respect de la protection des données personnelles (RGPD).
-    \item[Classification Ascendante Hiérarchique (CAH)] Algorithme de clustering agglomératif construisant un arbre (dendrogramme) en fusionnant itérativement les clusters les plus proches. La méthode de Ward minimise la variance intra-cluster.
     \item[Apprentissage supervisé / non-supervisé] Supervisé : le modèle apprend à partir d'exemples étiquetés (classification, régression). Non-supervisé : le modèle découvre des structures sans étiquettes (clustering, réduction de dimension). KMeans est non-supervisé.
+    \item[Archive .tgz] Format de fichier compressé (\textit{tar} + \textit{gzip}) couramment utilisé pour distribuer des jeux de données.
+    \item[Carte de chaleur] (\textit{Heatmap}) Visualisation matricielle où l'intensité de la couleur représente la valeur d'une variable. Utilisée ici pour la matrice de corrélation et la densité géographique.
+    \item[Classification Ascendante Hiérarchique (CAH)] Algorithme de clustering agglomératif construisant un arbre (dendrogramme) en fusionnant itérativement les clusters les plus proches. La méthode de Ward minimise la variance intra-cluster.
+    \item[CNIL] Commission Nationale de l'Informatique et des Libertés. Autorité française chargée de veiller au respect de la protection des données personnelles (RGPD).
+    \item[Colonnes catégorielles/numériques] Variables qualitatives (catégories : \texttt{ocean\_proximity}) vs quantitatives (nombres : \texttt{median\_income}). Le traitement diffère selon le type.
+    \item[Corrélation] Mesure de la relation linéaire entre deux variables. Le coefficient de Pearson $r$ varie de $-1$ (inverse) à $+1$ (directe), 0 = aucune relation linéaire.
+    \item[Distribution des variables] Répartition statistique des valeurs d'une variable, caractérisée par sa forme (normale, asymétrique), sa tendance centrale et sa dispersion.
+    \item[Éthique] Ensemble de principes guidant l'utilisation responsable de l'IA et des données : transparence, équité, respect de la vie privée, non-discrimination.
+    \item[Exploité] Qualifie un jeu de données qui a été traité, nettoyé et analysé pour en extraire de l'information utile.
+    \item[Gestion des valeurs manquantes] Ensemble de techniques pour traiter les données absentes : suppression, imputation par médiane, KNN, etc.
+    \item[Histogramme] Graphique en barres montrant la distribution de fréquence d'une variable continue, découpée en intervalles (\textit{bins}).
+    \item[Imputation] Remplacement des valeurs manquantes par des valeurs estimées. Méthodes : médiane, moyenne, KNNImputer, MICE, etc.
+    \item[Intelligence artificielle] Domaine de l'informatique visant à créer des systèmes capables de simuler des capacités cognitives humaines (raisonnement, apprentissage, prise de décision).
+    \item[Jeu de données] Ensemble structuré de données utilisé pour l'analyse ou l'entraînement d'un modèle. Ici : \texttt{housing.csv} (20\,640 lignes, 10 colonnes).
+    \item[Lisibilité des données et graphiques] Qualité d'une représentation qui permet une interprétation rapide et correcte (choix des échelles, couleurs, légendes).
+    \item[Modèle d'apprentissage automatique] Algorithme entraîné sur des données pour effectuer des prédictions ou des classifications. Exemples : régression, KMeans, arbres de décision.
+    \item[Optimiser] Améliorer les performances d'un modèle ou d'un processus en ajustant ses paramètres ou sa structure.
+    \item[Pandas] Bibliothèque Python pour la manipulation et l'analyse de données tabulaires via les structures \texttt{DataFrame} et \texttt{Series}.
     \item[Standardisation et normalisation] Standardisation (\textit{z-score}) : centrage-réduction ($\mu=0, \sigma=1$). Normalisation (\textit{min-max}) : mise à l'échelle $[0, 1]$. Utilisées pour homogénéiser les échelles des variables avant un algorithme basé sur les distances.
+    \item[Statistiques descriptives] Mesures résumant un jeu de données : moyenne, médiane, écart-type, quartiles, min/max.
+    \item[Type de données] Nature d'une variable : numérique (float, int) ou catégorielle (chaîne de caractères). Détermine les traitements applicables.
+    \item[Valeur médiane] Valeur séparant un ensemble de données en deux moitiés égales. Plus robuste aux outliers que la moyenne.
+    \item[Visualisation] Représentation graphique des données (histogrammes, scatter plots, cartes de chaleur) pour faciliter leur compréhension.
+    \item[Visualisation spatiale] Représentation de données géolocalisées sur une carte ou un plan (scatter plot lat/lon, Folium, Plotly maps).
+    \item[Zone géographique] Région délimitée par des coordonnées spatiales. Dans ce projet, chaque \textit{block group} californien est localisé par sa latitude et sa longitude.
+    \item[Zone homogène] Ensemble de points partageant des caractéristiques similaires. Un cluster est une zone homogène dans l'espace des variables.
 \end{description}
-
-\section*{Dépôt GitHub}
-
-Le code source complet (notebooks, données, rapport) est disponible à l'adresse :\\
-\url{https://github.com/Anisse-Imer/bloc-ia-prosit-1-clustering}
 
 \end{document}
