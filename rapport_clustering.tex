@@ -141,14 +141,7 @@ La proximité à l'océan a un impact majeur sur les prix (figure~\ref{fig:ocean
 \label{fig:ocean}
 \end{figure}
 
-La majorité des block groups (44.3\,\%) se trouvent à moins d'une heure de l'océan, et près d'un tiers (31.7\,\%) sont situés en zone intérieure (figure~\ref{fig:donut}).
-
-\begin{figure}[h]
-\centering
-\includegraphics[width=0.55\textwidth]{data/ocean_donut.png}
-\caption{Répartition des block groups par proximité à l'océan}
-\label{fig:donut}
-\end{figure}
+La majorité des block groups (44.3\,\%) se trouvent à moins d'une heure de l'océan, et près d'un tiers (31.7\,\%) sont situés en zone intérieure.
 
 Ce déséquilibre explique en partie la structure du clustering : les clusters 1 et 3, qui regroupent les zones intérieures à bas prix, totalisent 10\,176 block groups (49\,\% du dataset). La Californie est un État profondément dual : une frange côtière densément peuplée et chère, et un vaste intérieur agricole et résidentiel à prix modéré. La variable \texttt{ocean\_proximity} n'est pas utilisée directement dans le clustering (variable catégorielle), mais son effet est capté indirectement par les coordonnées géographiques.
 
@@ -195,6 +188,58 @@ Quelques observations extrêmes méritent attention :
 \end{itemize}
 
 Ces anomalies n'ont pas été filtrées dans le pipeline actuel mais devraient l'être dans un contexte de modélisation prédictive.
+
+\section{Évaluation du clustering --- Analyse Silhouette}
+
+Le score silhouette mesure pour chaque point la qualité de son assignation : $s = (b - a) / \max(a, b)$, où $a$ est la distance moyenne aux points de son propre cluster et $b$ la distance moyenne aux points du cluster le plus proche. Un score de +1 indique un point parfaitement classé, 0 un point à la frontière, et un score négatif un point probablement mal assigné.
+
+\subsection{Score silhouette en fonction de k}
+
+La figure~\ref{fig:silscores} montre l'évolution du score silhouette moyen pour $k \in [2, 10]$. Le score est maximal pour $k = 3$ ($s = 0.453$) et décroît ensuite. Pour $k = 6$, le score est de $s = 0.326$, ce qui indique une structure de clustering \textbf{faible mais existante}. Ce compromis est acceptable : un $k$ plus faible donnerait un meilleur score silhouette mais une segmentation géographique trop grossière pour être utile.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.85\textwidth]{data/silhouette_scores.png}
+\caption{Score silhouette moyen en fonction de k}
+\label{fig:silscores}
+\end{figure}
+
+\subsection{Silhouette plot détaillé (k=6)}
+
+La figure~\ref{fig:silplot} détaille la distribution du score silhouette pour chaque cluster :
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.85\textwidth]{data/silhouette_plot.png}
+\caption{Silhouette plot par cluster (k=6)}
+\label{fig:silplot}
+\end{figure}
+
+\begin{table}[h]
+\centering
+\caption{Statistiques silhouette par cluster}
+\begin{tabular}{crrrr}
+\toprule
+Cluster & Effectif & Silhouette moy. & Silhouette min. & \% négatif \\
+\midrule
+0 & 4\,766 & 0.298 & $-0.006$ & 0.1\,\% \\
+1 & 5\,294 & 0.377 & $-0.039$ & 1.6\,\% \\
+2 & 584 & 0.246 & $-0.169$ & 12.8\,\% \\
+3 & 4\,882 & 0.312 & $-0.018$ & 0.6\,\% \\
+4 & 3\,112 & 0.361 & $-0.070$ & 0.7\,\% \\
+5 & 2\,002 & 0.264 & $-0.125$ & 8.7\,\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Interprétation}
+
+\begin{itemize}
+    \item Les \textbf{clusters 1 et 4} sont les plus cohérents (silhouette $> 0.35$, très peu de scores négatifs). Ces clusters correspondent aux zones géographiquement et économiquement les plus homogènes : le nord intérieur (Sacramento) et la baie de San Francisco.
+    \item Le \textbf{cluster 2} (hauts revenus dispersés) est le plus fragile : 12.8\,\% de ses points ont un score négatif. Ce résultat est cohérent avec sa nature --- ces ménages aisés sont géographiquement dispersés, ce qui affaiblit la cohésion spatiale du cluster.
+    \item Le \textbf{cluster 5} (côte sud LA) présente aussi une proportion notable de scores négatifs (8.7\,\%), ce qui suggère une zone de transition entre les clusters côtiers et intérieurs de Los Angeles.
+    \item Globalement, le faible taux de scores négatifs ($< 2\,\%$ pour 4 clusters sur 6) confirme que la majorité des points sont raisonnablement bien assignés, même si la séparation entre clusters n'est pas tranchée.
+\end{itemize}
 
 \section{Pipeline de transformation}
 
