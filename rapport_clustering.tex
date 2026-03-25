@@ -96,6 +96,106 @@ Cluster & Effectif & Prix moyen (\$) & Revenu moyen & Zone géographique \\
     \item Le dataset final, enrichi de la colonne \texttt{cluster}, est exporté dans \texttt{data/housing\_data\_knn\_clustered.csv}.
 \end{itemize}
 
+\section{Analyse exploratoire et interprétation}
+
+\subsection{Qualité des données --- valeurs plafonnées}
+
+Deux variables présentent un \textbf{plafonnement artificiel} visible dans leurs distributions (figure~\ref{fig:capped}) :
+
+\begin{itemize}
+    \item \texttt{median\_house\_value} est plafonné à 500\,001\,\$ pour \textbf{965 block groups} (4.7\,\%). Ces zones, probablement les plus chères (Beverly Hills, Palo Alto\ldots), ont leur prix réel tronqué. Cela biaise toute analyse des hauts de gamme et peut fausser le clustering en regroupant artificiellement des zones de prix très différents.
+    \item \texttt{housing\_median\_age} est plafonné à 52 ans pour \textbf{1\,273 block groups} (6.2\,\%). Les bâtiments les plus anciens sont donc indistinguables dans le dataset.
+\end{itemize}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.95\textwidth]{data/capped_values.png}
+\caption{Distributions avec valeurs plafonnées (pics visibles aux bornes)}
+\label{fig:capped}
+\end{figure}
+
+\subsection{Revenu et prix --- la corrélation dominante}
+
+Le revenu médian est de loin le meilleur prédicteur du prix ($r = 0.69$), bien devant toutes les autres variables. La figure~\ref{fig:income} montre cette relation quasi-linéaire, avec deux anomalies notables :
+
+\begin{itemize}
+    \item Une \textbf{ligne horizontale à 500\,001\,\$} : les valeurs plafonnées, qui créent un artefact visuel et statistique.
+    \item Des \textbf{zones à haut revenu mais prix modéré} (coin bas-droit) : possiblement des zones rurales aisées avec un foncier bon marché.
+\end{itemize}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.85\textwidth]{data/income_vs_price.png}
+\caption{Revenu médian vs prix --- corrélation $r = 0.69$}
+\label{fig:income}
+\end{figure}
+
+\subsection{L'effet côtier}
+
+La proximité à l'océan a un impact majeur sur les prix (figure~\ref{fig:ocean}). Les zones \texttt{INLAND} affichent un prix médian de 108\,500\,\$, contre 233\,800\,\$ pour \texttt{NEAR BAY} --- plus du double. La catégorie \texttt{ISLAND} (5 observations seulement) montre des prix très élevés mais n'est pas statistiquement significative.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.85\textwidth]{data/price_by_ocean.png}
+\caption{Prix médian par proximité à l'océan}
+\label{fig:ocean}
+\end{figure}
+
+La majorité des block groups (44.3\,\%) se trouvent à moins d'une heure de l'océan, et près d'un tiers (31.7\,\%) sont situés en zone intérieure (figure~\ref{fig:donut}).
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.55\textwidth]{data/ocean_donut.png}
+\caption{Répartition des block groups par proximité à l'océan}
+\label{fig:donut}
+\end{figure}
+
+Ce déséquilibre explique en partie la structure du clustering : les clusters 1 et 3, qui regroupent les zones intérieures à bas prix, totalisent 10\,176 block groups (49\,\% du dataset). La Californie est un État profondément dual : une frange côtière densément peuplée et chère, et un vaste intérieur agricole et résidentiel à prix modéré. La variable \texttt{ocean\_proximity} n'est pas utilisée directement dans le clustering (variable catégorielle), mais son effet est capté indirectement par les coordonnées géographiques.
+
+\subsection{Matrice de corrélation}
+
+La figure~\ref{fig:corr} révèle plusieurs structures intéressantes :
+
+\begin{itemize}
+    \item \texttt{total\_rooms}, \texttt{total\_bedrooms}, \texttt{population} et \texttt{households} sont fortement corrélés entre eux ($r > 0.85$). Ce sont des mesures de \textbf{taille du block group} : un quartier plus peuplé a logiquement plus de pièces, de chambres et de ménages. Utiliser ces 4 variables simultanément dans un modèle introduirait de la \textbf{multicolinéarité}.
+    \item \texttt{latitude} et \texttt{longitude} captent la géographie : les prix baissent quand on s'éloigne de la côte (latitude élevée = nord, corrélation négative avec le prix).
+    \item \texttt{median\_income} est la seule variable fortement corrélée au prix ($r = 0.69$) sans être redondante avec les autres.
+\end{itemize}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.85\textwidth]{data/correlation_heatmap.png}
+\caption{Matrice de corrélation des variables numériques}
+\label{fig:corr}
+\end{figure}
+
+Ce résultat justifie le choix des 4 variables de clustering : en excluant les variables de taille (\texttt{total\_rooms}, \texttt{total\_bedrooms}, \texttt{population}, \texttt{households}) qui mesurent toutes la même chose, on évite la redondance. Le couple (\texttt{latitude}, \texttt{longitude}) apporte la dimension spatiale, tandis que \texttt{median\_income} est le meilleur proxy du niveau socio-économique --- plus discriminant que le prix lui-même, qui est plafonné. On note aussi que \texttt{housing\_median\_age} ne corrèle quasiment avec rien ($r = 0.11$ avec le prix), ce qui confirme son exclusion du clustering.
+
+\subsection{Variables dérivées --- le ratio chambres/pièces}
+
+En créant le ratio \texttt{bedrooms\_ratio} = \texttt{total\_bedrooms} / \texttt{total\_rooms}, on obtient une corrélation négative avec le prix ($r = -0.26$). Les logements avec une \textbf{proportion élevée de chambres} par rapport au nombre total de pièces sont moins chers. Cela correspond à des logements plus petits (studios, T1) où la chambre constitue l'essentiel de l'espace, typiques des zones à faible revenu.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.85\textwidth]{data/bedrooms_ratio_vs_price.png}
+\caption{Ratio chambres/pièces vs prix --- corrélation $r = -0.26$}
+\label{fig:bedrooms}
+\end{figure}
+
+À l'inverse, un ratio faible signale des logements spacieux avec salon, bureau, salle à manger --- typiques des quartiers résidentiels aisés. Cette variable dérivée est plus informative que \texttt{total\_bedrooms} seul ($r = 0.05$ avec le prix) car elle normalise par la taille du logement et capture réellement la \textbf{structure} du bien plutôt que sa taille brute. Dans un modèle prédictif, ce ratio serait un candidat pertinent en remplacement des variables brutes \texttt{total\_rooms} et \texttt{total\_bedrooms}.
+
+\subsection{Outliers et données suspectes}
+
+Quelques observations extrêmes méritent attention :
+
+\begin{itemize}
+    \item \textbf{33 block groups} ont plus de 20\,000 pièces totales, et \textbf{9} ont plus de 50 pièces par ménage. Ces valeurs sont physiquement improbables et pourraient résulter d'erreurs de saisie ou de block groups atypiques (résidences universitaires, casernes).
+    \item \textbf{23 block groups} dépassent 10\,000 habitants, avec un maximum à 35\,682 --- inhabituellement élevé pour la plus petite division administrative.
+    \item Le ratio \texttt{population\_per\_household} atteint 1\,243 pour un block group, ce qui est manifestement une erreur (moyenne = 3.07).
+\end{itemize}
+
+Ces anomalies n'ont pas été filtrées dans le pipeline actuel mais devraient l'être dans un contexte de modélisation prédictive.
+
 \section{Pipeline de transformation}
 
 \begin{enumerate}
