@@ -238,6 +238,41 @@ Le score silhouette permet d'identifier les clusters les plus cohérents (score 
     \item Export $\rightarrow$ \texttt{housing\_data\_knn\_clustered.csv} (20\,640 lignes, 11 colonnes)
 \end{enumerate}
 
+\section*{Glossaire}
+
+\begin{description}
+    \item[Optimiser] Améliorer les performances d'un modèle ou d'un processus en ajustant ses paramètres ou sa structure.
+    \item[Intelligence artificielle] Domaine de l'informatique visant à créer des systèmes capables de simuler des capacités cognitives humaines (raisonnement, apprentissage, prise de décision).
+    \item[Jeu de données] Ensemble structuré de données utilisé pour l'analyse ou l'entraînement d'un modèle. Ici : \texttt{housing.csv} (20\,640 lignes, 10 colonnes).
+    \item[Zone géographique] Région délimitée par des coordonnées spatiales. Dans ce projet, chaque \textit{block group} californien est localisé par sa latitude et sa longitude.
+    \item[Exploité] Qualifie un jeu de données qui a été traité, nettoyé et analysé pour en extraire de l'information utile.
+    \item[Zone homogène] Ensemble de points partageant des caractéristiques similaires. Un cluster est une zone homogène dans l'espace des variables.
+    \item[Analyse] Processus d'examen méthodique des données pour en dégager des tendances, des structures ou des anomalies.
+    \item[Apprentissage automatique] (\textit{Machine Learning}) Sous-domaine de l'IA où les algorithmes apprennent des patterns à partir de données sans être explicitement programmés.
+    \item[Visualisation] Représentation graphique des données (histogrammes, scatter plots, cartes de chaleur) pour faciliter leur compréhension.
+    \item[Gestion des valeurs manquantes] Ensemble de techniques pour traiter les données absentes : suppression, imputation par médiane, KNN, etc.
+    \item[Lisibilité des données et graphiques] Qualité d'une représentation qui permet une interprétation rapide et correcte (choix des échelles, couleurs, légendes).
+    \item[Carte de chaleur] (\textit{Heatmap}) Visualisation matricielle où l'intensité de la couleur représente la valeur d'une variable. Utilisée ici pour la matrice de corrélation et la densité géographique.
+    \item[Archive .tgz] Format de fichier compressé (\textit{tar} + \textit{gzip}) couramment utilisé pour distribuer des jeux de données.
+    \item[Type de données] Nature d'une variable : numérique (float, int) ou catégorielle (chaîne de caractères). Détermine les traitements applicables.
+    \item[Distribution des variables] Répartition statistique des valeurs d'une variable, caractérisée par sa forme (normale, asymétrique), sa tendance centrale et sa dispersion.
+    \item[Statistiques descriptives] Mesures résumant un jeu de données : moyenne, médiane, écart-type, quartiles, min/max.
+    \item[Imputation] Remplacement des valeurs manquantes par des valeurs estimées. Méthodes : médiane, moyenne, KNNImputer, MICE, etc.
+    \item[Pandas] Bibliothèque Python pour la manipulation et l'analyse de données tabulaires via les structures \texttt{DataFrame} et \texttt{Series}.
+    \item[Colonnes catégorielles/numériques] Variables qualitatives (catégories : \texttt{ocean\_proximity}) vs quantitatives (nombres : \texttt{median\_income}). Le traitement diffère selon le type.
+    \item[Valeur médiane] Valeur séparant un ensemble de données en deux moitiés égales. Plus robuste aux outliers que la moyenne.
+    \item[Histogramme] Graphique en barres montrant la distribution de fréquence d'une variable continue, découpée en intervalles (\textit{bins}).
+    \item[Visualisation spatiale] Représentation de données géolocalisées sur une carte ou un plan (scatter plot lat/lon, Folium, Plotly maps).
+    \item[Corrélation] Mesure de la relation linéaire entre deux variables. Le coefficient de Pearson $r$ varie de $-1$ (inverse) à $+1$ (directe), 0 = aucune relation linéaire.
+    \item[Modèle d'apprentissage automatique] Algorithme entraîné sur des données pour effectuer des prédictions ou des classifications. Exemples : régression, KMeans, arbres de décision.
+    \item[Algorithme des K-Means] Algorithme de clustering partitionnant les données en $k$ groupes en minimisant la somme des distances intra-cluster (WCSS). Itératif : assignation puis mise à jour des centroïdes.
+    \item[Éthique] Ensemble de principes guidant l'utilisation responsable de l'IA et des données : transparence, équité, respect de la vie privée, non-discrimination.
+    \item[CNIL] Commission Nationale de l'Informatique et des Libertés. Autorité française chargée de veiller au respect de la protection des données personnelles (RGPD).
+    \item[Classification Ascendante Hiérarchique (CAH)] Algorithme de clustering agglomératif construisant un arbre (dendrogramme) en fusionnant itérativement les clusters les plus proches. La méthode de Ward minimise la variance intra-cluster.
+    \item[Apprentissage supervisé / non-supervisé] Supervisé : le modèle apprend à partir d'exemples étiquetés (classification, régression). Non-supervisé : le modèle découvre des structures sans étiquettes (clustering, réduction de dimension). KMeans est non-supervisé.
+    \item[Standardisation et normalisation] Standardisation (\textit{z-score}) : centrage-réduction ($\mu=0, \sigma=1$). Normalisation (\textit{min-max}) : mise à l'échelle $[0, 1]$. Utilisées pour homogénéiser les échelles des variables avant un algorithme basé sur les distances.
+\end{description}
+
 \section*{Dépôt GitHub}
 
 Le code source complet (notebooks, données, rapport) est disponible à l'adresse :\\
