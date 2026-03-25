@@ -1,0 +1,110 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{geometry}
+\usepackage{hyperref}
+\geometry{margin=2.5cm}
+
+\title{Clustering des données immobilières californiennes}
+\author{Bloc IA --- Prosit 1}
+\date{25 mars 2026}
+
+\begin{document}
+\maketitle
+
+\section{Description des données}
+
+Le jeu de données \texttt{housing.csv} contient 20\,640 enregistrements issus du recensement californien de 1990. Chaque ligne correspond à un \textit{block group} (plus petite unité administrative, 500 à 5\,000 habitants).
+
+\begin{table}[h]
+\centering
+\caption{Variables du dataset}
+\begin{tabular}{lll}
+\toprule
+Variable & Type & Description \\
+\midrule
+longitude / latitude & float & Coordonnées géographiques \\
+housing\_median\_age & float & Âge médian des logements \\
+total\_rooms & float & Nombre total de pièces \\
+total\_bedrooms & float & Nombre total de chambres \\
+population & float & Population du block group \\
+households & float & Nombre de ménages \\
+median\_income & float & Revenu médian (en dizaines de k\$) \\
+median\_house\_value & float & Prix médian du logement (\$) \\
+ocean\_proximity & cat. & Proximité à l'océan \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Valeurs manquantes : seule \texttt{total\_bedrooms} présentait 207 valeurs nulles. Ces valeurs ont été imputées à l'aide de \textbf{KNNImputer} (k=5, pondération par distance) en utilisant l'ensemble des autres variables numériques. Le dataset imputé est exporté dans \texttt{data/housing\_data\_knn.csv}.
+
+\section{Choix méthodologiques}
+
+\begin{enumerate}
+    \item \textbf{Imputation des valeurs manquantes} : KNNImputer (k=5, \texttt{weights='distance'}) après standardisation. Chaque valeur manquante de \texttt{total\_bedrooms} est prédite à partir de ses 5 plus proches voisins complets.
+    \item \textbf{Sélection des variables} : \texttt{latitude}, \texttt{longitude}, \texttt{median\_income}, \texttt{median\_house\_value}. Ces variables captent à la fois la position géographique et le profil socio-économique de chaque zone.
+    \item \textbf{Standardisation} : StandardScaler (centrage-réduction) appliqué aux 4 variables afin qu'aucune ne domine le calcul de distance euclidienne.
+    \item \textbf{Algorithme} : KMeans --- simple, rapide et bien adapté aux données numériques continues. Paramètres : \texttt{n\_init=10}, \texttt{random\_state=42}.
+    \item \textbf{Choix de k} : méthode du coude (Elbow Method) sur le WCSS pour $k \in [2, 15]$. Le coude observé suggère $k = 6$.
+\end{enumerate}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.85\textwidth]{data/elbow_method.png}
+\caption{Méthode du coude --- WCSS en fonction de k}
+\end{figure}
+
+\section{Résultats}
+
+\subsection{Distribution des clusters}
+
+\begin{table}[h]
+\centering
+\caption{Statistiques par cluster (k = 6)}
+\begin{tabular}{crrrl}
+\toprule
+Cluster & Effectif & Prix moyen (\$) & Revenu moyen & Zone géographique \\
+\midrule
+0 & 4\,766 & 213\,622 & 4.20 & Sud (LA périphérie) \\
+1 & 5\,294 & 121\,905 & 2.82 & Nord intérieur (Sacramento) \\
+2 & 584 & 482\,953 & 10.36 & Hauts revenus (dispersés) \\
+3 & 4\,882 & 126\,273 & 2.45 & Sud intérieur (Riverside) \\
+4 & 3\,112 & 300\,859 & 4.94 & Baie de San Francisco \\
+5 & 2\,002 & 385\,234 & 5.76 & Côte sud (LA côtière) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Visualisation géographique}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.85\textwidth]{data/clusters_scatter.png}
+\caption{Répartition spatiale des clusters (latitude vs longitude)}
+\end{figure}
+
+\subsection{Interprétation synthétique}
+
+\begin{itemize}
+    \item Le clustering reflète une segmentation géographique et socio-économique cohérente de la Californie.
+    \item Les zones côtières (clusters 4, 5) présentent des prix et revenus élevés.
+    \item Les zones intérieures (clusters 1, 3) regroupent les logements les moins chers et les revenus les plus bas.
+    \item Le cluster 2 (584 observations) isole une population à très hauts revenus, dispersée sur le territoire.
+    \item Le dataset final, enrichi de la colonne \texttt{cluster}, est exporté dans \texttt{data/housing\_data\_knn\_clustered.csv}.
+\end{itemize}
+
+\section{Pipeline de transformation}
+
+\begin{enumerate}
+    \item Chargement de \texttt{housing.csv} (20\,640 lignes, 10 colonnes)
+    \item Imputation de \texttt{total\_bedrooms} via KNNImputer (k=5) $\rightarrow$ \texttt{housing\_data\_knn.csv}
+    \item Sélection des 4 variables de clustering
+    \item Standardisation (StandardScaler)
+    \item KMeans ($k = 6$) $\rightarrow$ ajout de la colonne \texttt{cluster}
+    \item Export $\rightarrow$ \texttt{housing\_data\_knn\_clustered.csv} (20\,640 lignes, 11 colonnes)
+\end{enumerate}
+
+\end{document}
