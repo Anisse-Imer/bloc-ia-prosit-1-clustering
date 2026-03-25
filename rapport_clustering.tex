@@ -45,16 +45,24 @@ Valeurs manquantes : seule \texttt{total\_bedrooms} présentait 207 valeurs null
 
 \begin{enumerate}
     \item \textbf{Imputation des valeurs manquantes} : KNNImputer (k=5, \texttt{weights='distance'}) après standardisation. Chaque valeur manquante de \texttt{total\_bedrooms} est prédite à partir de ses 5 plus proches voisins complets.
-    \item \textbf{Sélection des variables} : \texttt{latitude}, \texttt{longitude}, \texttt{median\_income}, \texttt{median\_house\_value}. Ces variables captent à la fois la position géographique et le profil socio-économique de chaque zone.
-    \item \textbf{Standardisation} : StandardScaler (centrage-réduction) appliqué aux 4 variables afin qu'aucune ne domine le calcul de distance euclidienne.
+    \item \textbf{Variables} : toutes les colonnes du dataset sont utilisées. \texttt{ocean\_proximity} est encodée via \texttt{LabelEncoder} pour la rendre numérique.
+    \item \textbf{Pas de standardisation} : les données brutes sont utilisées directement pour le clustering.
     \item \textbf{Algorithme} : KMeans --- simple, rapide et bien adapté aux données numériques continues. Paramètres : \texttt{n\_init=10}, \texttt{random\_state=42}.
-    \item \textbf{Choix de k} : méthode du coude (Elbow Method) sur le WCSS pour $k \in [2, 15]$. Le coude observé suggère $k = 6$.
+    \item \textbf{Choix de k} : déterminé par \textbf{CAH} (Classification Ascendante Hiérarchique, méthode de Ward) via un dendrogramme (figure~\ref{fig:dendro}), puis validé par la méthode du coude (Elbow Method) sur le WCSS (figure~\ref{fig:elbow}). Les deux approches convergent vers $k = 5$.
 \end{enumerate}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.85\textwidth]{data/dendrogram_cah.png}
+\caption{Dendrogramme CAH (méthode de Ward) --- échantillon de 2\,000 points}
+\label{fig:dendro}
+\end{figure}
 
 \begin{figure}[h]
 \centering
 \includegraphics[width=0.85\textwidth]{data/elbow_method.png}
 \caption{Méthode du coude --- WCSS en fonction de k}
+\label{fig:elbow}
 \end{figure}
 
 \section{Résultats}
@@ -63,17 +71,16 @@ Valeurs manquantes : seule \texttt{total\_bedrooms} présentait 207 valeurs null
 
 \begin{table}[h]
 \centering
-\caption{Statistiques par cluster (k = 6)}
-\begin{tabular}{crrrl}
+\caption{Statistiques par cluster (k = 5)}
+\begin{tabular}{crrr}
 \toprule
-Cluster & Effectif & Prix moyen (\$) & Revenu moyen & Zone géographique \\
+Cluster & Effectif & Prix moyen (\$) & Revenu moyen \\
 \midrule
-0 & 4\,766 & 213\,622 & 4.20 & Sud (LA périphérie) \\
-1 & 5\,294 & 121\,905 & 2.82 & Nord intérieur (Sacramento) \\
-2 & 584 & 482\,953 & 10.36 & Hauts revenus (dispersés) \\
-3 & 4\,882 & 126\,273 & 2.45 & Sud intérieur (Riverside) \\
-4 & 3\,112 & 300\,859 & 4.94 & Baie de San Francisco \\
-5 & 2\,002 & 385\,234 & 5.76 & Côte sud (LA côtière) \\
+0 & 5\,731 & 90\,084 & 2.50 \\
+1 & 2\,318 & 346\,896 & 5.24 \\
+2 & 6\,446 & 164\,722 & 3.47 \\
+3 & 1\,613 & 480\,484 & 7.02 \\
+4 & 4\,532 & 245\,435 & 4.35 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -89,10 +96,10 @@ Cluster & Effectif & Prix moyen (\$) & Revenu moyen & Zone géographique \\
 \subsection{Interprétation synthétique}
 
 \begin{itemize}
-    \item Le clustering reflète une segmentation géographique et socio-économique cohérente de la Californie.
-    \item Les zones côtières (clusters 4, 5) présentent des prix et revenus élevés.
-    \item Les zones intérieures (clusters 1, 3) regroupent les logements les moins chers et les revenus les plus bas.
-    \item Le cluster 2 (584 observations) isole une population à très hauts revenus, dispersée sur le territoire.
+    \item Le clustering segmente la Californie en 5 profils socio-économiques distincts.
+    \item Le \textbf{cluster 0} (5\,731 block groups) regroupe les zones les moins chères avec les revenus les plus bas --- zones rurales et intérieures.
+    \item Le \textbf{cluster 3} (1\,613 block groups) isole les zones les plus chères avec les revenus les plus élevés (prix moyen 480\,484\,\$, revenu 7.02).
+    \item Les \textbf{clusters 1, 2, 4} représentent des profils intermédiaires à différents niveaux de prix et de revenus.
     \item Le dataset final, enrichi de la colonne \texttt{cluster}, est exporté dans \texttt{data/housing\_data\_knn\_clustered.csv}.
 \end{itemize}
 
@@ -143,7 +150,7 @@ La proximité à l'océan a un impact majeur sur les prix (figure~\ref{fig:ocean
 
 La majorité des block groups (44.3\,\%) se trouvent à moins d'une heure de l'océan, et près d'un tiers (31.7\,\%) sont situés en zone intérieure.
 
-Ce déséquilibre explique en partie la structure du clustering : les clusters 1 et 3, qui regroupent les zones intérieures à bas prix, totalisent 10\,176 block groups (49\,\% du dataset). La Californie est un État profondément dual : une frange côtière densément peuplée et chère, et un vaste intérieur agricole et résidentiel à prix modéré. La variable \texttt{ocean\_proximity} n'est pas utilisée directement dans le clustering (variable catégorielle), mais son effet est capté indirectement par les coordonnées géographiques.
+Ce déséquilibre explique en partie la structure du clustering. La Californie est un État profondément dual : une frange côtière densément peuplée et chère, et un vaste intérieur agricole et résidentiel à prix modéré. La variable \texttt{ocean\_proximity} est intégrée au clustering via un encodage \texttt{LabelEncoder}, ce qui permet au modèle de capter directement cette dimension côtière en complément des coordonnées géographiques.
 
 \subsection{Matrice de corrélation}
 
@@ -162,7 +169,7 @@ La figure~\ref{fig:corr} révèle plusieurs structures intéressantes :
 \label{fig:corr}
 \end{figure}
 
-Ce résultat justifie le choix des 4 variables de clustering : en excluant les variables de taille (\texttt{total\_rooms}, \texttt{total\_bedrooms}, \texttt{population}, \texttt{households}) qui mesurent toutes la même chose, on évite la redondance. Le couple (\texttt{latitude}, \texttt{longitude}) apporte la dimension spatiale, tandis que \texttt{median\_income} est le meilleur proxy du niveau socio-économique --- plus discriminant que le prix lui-même, qui est plafonné. On note aussi que \texttt{housing\_median\_age} ne corrèle quasiment avec rien ($r = 0.11$ avec le prix), ce qui confirme son exclusion du clustering.
+Malgré la multicolinéarité entre les variables de taille, toutes les variables sont conservées dans le clustering. Sans standardisation, ce sont les variables à grande échelle (\texttt{median\_house\_value}, \texttt{total\_rooms}, \texttt{population}) qui dominent naturellement le calcul de distance euclidienne, ce qui oriente le clustering vers une segmentation principalement économique et démographique.
 
 \subsection{Variables dérivées --- le ratio chambres/pièces}
 
@@ -195,7 +202,7 @@ Le score silhouette mesure pour chaque point la qualité de son assignation : $s
 
 \subsection{Score silhouette en fonction de k}
 
-La figure~\ref{fig:silscores} montre l'évolution du score silhouette moyen pour $k \in [2, 10]$. Le score est maximal pour $k = 3$ ($s = 0.453$) et décroît ensuite. Pour $k = 6$, le score est de $s = 0.326$, ce qui indique une structure de clustering \textbf{faible mais existante}. Ce compromis est acceptable : un $k$ plus faible donnerait un meilleur score silhouette mais une segmentation géographique trop grossière pour être utile.
+La figure~\ref{fig:silscores} montre l'évolution du score silhouette moyen pour $k \in [2, 10]$. Le choix de $k = 5$ offre un compromis entre granularité de la segmentation et qualité du clustering.
 
 \begin{figure}[h]
 \centering
@@ -204,52 +211,36 @@ La figure~\ref{fig:silscores} montre l'évolution du score silhouette moyen pour
 \label{fig:silscores}
 \end{figure}
 
-\subsection{Silhouette plot détaillé (k=6)}
+\subsection{Silhouette plot détaillé (k=5)}
 
-La figure~\ref{fig:silplot} détaille la distribution du score silhouette pour chaque cluster :
+La figure~\ref{fig:silplot} détaille la distribution du score silhouette pour chaque cluster. L'analyse silhouette doit être re-exécutée avec les nouveaux paramètres ($k = 5$, toutes variables, sans standardisation) via le notebook \texttt{silhouette\_analysis.ipynb}.
 
 \begin{figure}[h]
 \centering
 \includegraphics[width=0.85\textwidth]{data/silhouette_plot.png}
-\caption{Silhouette plot par cluster (k=6)}
+\caption{Silhouette plot par cluster (k=5)}
 \label{fig:silplot}
 \end{figure}
 
-\begin{table}[h]
-\centering
-\caption{Statistiques silhouette par cluster}
-\begin{tabular}{crrrr}
-\toprule
-Cluster & Effectif & Silhouette moy. & Silhouette min. & \% négatif \\
-\midrule
-0 & 4\,766 & 0.298 & $-0.006$ & 0.1\,\% \\
-1 & 5\,294 & 0.377 & $-0.039$ & 1.6\,\% \\
-2 & 584 & 0.246 & $-0.169$ & 12.8\,\% \\
-3 & 4\,882 & 0.312 & $-0.018$ & 0.6\,\% \\
-4 & 3\,112 & 0.361 & $-0.070$ & 0.7\,\% \\
-5 & 2\,002 & 0.264 & $-0.125$ & 8.7\,\% \\
-\bottomrule
-\end{tabular}
-\end{table}
-
 \subsection{Interprétation}
 
-\begin{itemize}
-    \item Les \textbf{clusters 1 et 4} sont les plus cohérents (silhouette $> 0.35$, très peu de scores négatifs). Ces clusters correspondent aux zones géographiquement et économiquement les plus homogènes : le nord intérieur (Sacramento) et la baie de San Francisco.
-    \item Le \textbf{cluster 2} (hauts revenus dispersés) est le plus fragile : 12.8\,\% de ses points ont un score négatif. Ce résultat est cohérent avec sa nature --- ces ménages aisés sont géographiquement dispersés, ce qui affaiblit la cohésion spatiale du cluster.
-    \item Le \textbf{cluster 5} (côte sud LA) présente aussi une proportion notable de scores négatifs (8.7\,\%), ce qui suggère une zone de transition entre les clusters côtiers et intérieurs de Los Angeles.
-    \item Globalement, le faible taux de scores négatifs ($< 2\,\%$ pour 4 clusters sur 6) confirme que la majorité des points sont raisonnablement bien assignés, même si la séparation entre clusters n'est pas tranchée.
-\end{itemize}
+Le score silhouette permet d'identifier les clusters les plus cohérents (score élevé, peu de points négatifs) et les plus fragiles (score faible, proportion importante de points mal assignés). Les clusters à score négatif élevé indiquent des zones de transition entre segments, ce qui est attendu dans un espace géographique continu.
 
 \section{Pipeline de transformation}
 
 \begin{enumerate}
     \item Chargement de \texttt{housing.csv} (20\,640 lignes, 10 colonnes)
     \item Imputation de \texttt{total\_bedrooms} via KNNImputer (k=5) $\rightarrow$ \texttt{housing\_data\_knn.csv}
-    \item Sélection des 4 variables de clustering
-    \item Standardisation (StandardScaler)
-    \item KMeans ($k = 6$) $\rightarrow$ ajout de la colonne \texttt{cluster}
+    \item Encodage de \texttt{ocean\_proximity} via \texttt{LabelEncoder}
+    \item Détermination de $k$ par CAH (dendrogramme de Ward)
+    \item Validation par méthode du coude (WCSS) $\rightarrow$ $k = 5$
+    \item KMeans ($k = 5$) sur toutes les variables $\rightarrow$ ajout de la colonne \texttt{cluster}
     \item Export $\rightarrow$ \texttt{housing\_data\_knn\_clustered.csv} (20\,640 lignes, 11 colonnes)
 \end{enumerate}
+
+\section*{Dépôt GitHub}
+
+Le code source complet (notebooks, données, rapport) est disponible à l'adresse :\\
+\url{https://github.com/Anisse-Imer/bloc-ia-prosit-1-clustering}
 
 \end{document}
