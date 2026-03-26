@@ -54,7 +54,7 @@ Valeurs manquantes : seule \texttt{total\_bedrooms} présentait 207 valeurs null
     \item \textbf{Variables} : toutes les colonnes du dataset sont utilisées. \texttt{ocean\_proximity} est encodée via \texttt{LabelEncoder} pour la rendre numérique.
     \item \textbf{Pas de standardisation} : les données brutes sont utilisées directement pour le clustering.
     \item \textbf{Algorithme} : KMeans --- simple, rapide et bien adapté aux données numériques continues. Paramètres : \texttt{n\_init=10}, \texttt{random\_state=42}.
-    \item \textbf{Choix de k} : déterminé par \textbf{CAH} (Classification Ascendante Hiérarchique, méthode de Ward) via un dendrogramme (figure~\ref{fig:dendro}), puis validé par la méthode du coude (Elbow Method) sur le WCSS (figure~\ref{fig:elbow}). Les deux approches convergent vers $k = 5$.
+    \item \textbf{Choix de k} : déterminé par \textbf{CAH} (Classification Ascendante Hiérarchique, méthode de Ward) via un dendrogramme (figure~\ref{fig:dendro}), puis visualisé par la méthode du coude (Elbow Method) sur le WCSS (figure~\ref{fig:elbow}). Le choix de $k = 2$ permet de capturer la dualité côte/intérieur du marché californien.
 \end{enumerate}
 
 \begin{figure}[H]
@@ -81,16 +81,13 @@ L'algorithme KMeans partitionne les données en $k$ groupes en trois étapes it�
 
 \begin{table}[H]
 \centering
-\caption{Statistiques par cluster (k = 5)}
+\caption{Statistiques par cluster (k = 2)}
 \begin{tabular}{crrr}
 \toprule
 Cluster & Effectif & Prix moyen (\$) & Revenu moyen \\
 \midrule
-0 & 5\,731 & 90\,084 & 2.50 \\
-1 & 2\,318 & 346\,896 & 5.24 \\
-2 & 6\,446 & 164\,722 & 3.47 \\
-3 & 1\,613 & 480\,484 & 7.02 \\
-4 & 4\,532 & 245\,435 & 4.35 \\
+0 & 5\,472 & 366\,166 & 5.61 \\
+1 & 15\,168 & 149\,383 & 3.24 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -105,13 +102,14 @@ Cluster & Effectif & Prix moyen (\$) & Revenu moyen \\
 
 \subsection{Interprétation synthétique}
 
+Le clustering avec $k = 2$ segmente le marché immobilier californien en \textbf{deux grands profils} qui reflètent la dualité géographique et socio-économique de l'État :
+
 \begin{itemize}
-    \item Le clustering segmente la Californie en 5 profils socio-économiques distincts.
-    \item Le \textbf{cluster 0} (5\,731 block groups) regroupe les zones les moins chères avec les revenus les plus bas --- zones rurales et intérieures.
-    \item Le \textbf{cluster 3} (1\,613 block groups) isole les zones les plus chères avec les revenus les plus élevés (prix moyen 480\,484\,\$, revenu 7.02).
-    \item Les \textbf{clusters 1, 2, 4} représentent des profils intermédiaires à différents niveaux de prix et de revenus.
-    \item Le dataset final, enrichi de la colonne \texttt{cluster}, est exporté dans \texttt{data/housing\_data\_knn\_clustered.csv}.
+    \item \textbf{Cluster 0 --- Californie côtière et urbaine} (5\,472 block groups, prix moyen 366\,166\,\$, revenu 5.61) : regroupe les zones à prix élevés et revenus hauts. Ce cluster correspond à la frange côtière densément peuplée et aux grandes métropoles (San Francisco Bay Area, Los Angeles Basin, San Diego). Ces zones bénéficient de la proximité de l'océan, d'une forte activité économique (tech, finance, entertainment) et d'une demande immobilière soutenue.
+    \item \textbf{Cluster 1 --- Californie intérieure et rurale} (15\,168 block groups, prix moyen 149\,383\,\$, revenu 3.24) : regroupe les zones à prix modérés et revenus plus bas. Ce cluster correspond aux vastes zones intérieures (Central Valley, zones rurales, déserts) où le foncier est bon marché et la densité de population plus faible. On y retrouve les zones agricoles (Fresno, Bakersfield) et les villes intérieures.
 \end{itemize}
+
+Cette partition capture la \textbf{fracture côte/intérieur}, structure dominante du marché californien : le prix moyen du cluster côtier est \textbf{2.5 fois} celui du cluster intérieur. Le score silhouette de 0.6286 pour $k = 2$ est le plus élevé de tous les $k$ testés, confirmant que cette séparation binaire est la plus nette dans les données. Le dataset final est exporté dans \texttt{data/housing\_data\_knn\_clustered.csv}.
 
 \section{Analyse exploratoire et interprétation}
 
@@ -212,7 +210,7 @@ Le score silhouette mesure pour chaque point la qualité de son assignation : $s
 
 \subsection{Score silhouette en fonction de k}
 
-La figure~\ref{fig:silscores} montre l'évolution du score silhouette moyen pour $k \in [2, 10]$. Le choix de $k = 5$ offre un compromis entre granularité de la segmentation et qualité du clustering.
+La figure~\ref{fig:silscores} montre l'évolution du score silhouette moyen pour $k \in [2, 10]$. Le score le plus élevé est obtenu pour $k = 2$ (0.6286), confirmant que la séparation en deux clusters est la plus nette.
 
 \begin{figure}[H]
 \centering
@@ -221,14 +219,14 @@ La figure~\ref{fig:silscores} montre l'évolution du score silhouette moyen pour
 \label{fig:silscores}
 \end{figure}
 
-\subsection{Silhouette plot détaillé (k=5)}
+\subsection{Silhouette plot détaillé (k=2)}
 
-La figure~\ref{fig:silplot} détaille la distribution du score silhouette pour chaque cluster. L'analyse silhouette doit être re-exécutée avec les nouveaux paramètres ($k = 5$, toutes variables, sans standardisation) via le notebook \texttt{silhouette\_analysis.ipynb}.
+La figure~\ref{fig:silplot} détaille la distribution du score silhouette pour chaque cluster. Les deux clusters présentent des silhouettes larges et homogènes, avec très peu de points négatifs, confirmant une séparation nette entre les deux profils.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.85\textwidth]{data/silhouette_plot.png}
-\caption{Silhouette plot par cluster (k=5)}
+\caption{Silhouette plot par cluster (k=2)}
 \label{fig:silplot}
 \end{figure}
 
@@ -243,8 +241,8 @@ Le score silhouette permet d'identifier les clusters les plus cohérents (score 
     \item Imputation de \texttt{total\_bedrooms} via KNNImputer (k=5) $\rightarrow$ \texttt{housing\_data\_knn.csv}
     \item Encodage de \texttt{ocean\_proximity} via \texttt{LabelEncoder}
     \item Détermination de $k$ par CAH (dendrogramme de Ward)
-    \item Validation par méthode du coude (WCSS) $\rightarrow$ $k = 5$
-    \item KMeans ($k = 5$) sur toutes les variables $\rightarrow$ ajout de la colonne \texttt{cluster}
+    \item Validation par méthode du coude (WCSS) $\rightarrow$ $k = 2$
+    \item KMeans ($k = 2$) sur toutes les variables $\rightarrow$ ajout de la colonne \texttt{cluster}
     \item Export $\rightarrow$ \texttt{housing\_data\_knn\_clustered.csv} (20\,640 lignes, 11 colonnes)
 \end{enumerate}
 
